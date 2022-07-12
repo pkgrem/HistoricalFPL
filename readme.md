@@ -45,3 +45,23 @@ See FileTypes for import:
 | was\_home          | bit        | YES          |
 | yellow\_cards      | bit        | YES          |
 | GW                 | tinyint    | YES          |
+
+After creating the base set of data I created a subset of data based on some queries and groupings to get averages. From the base set of data I created a new table, so it would be queriable. Is that a word? Essentially, it would create less of system load due to the data being in a table instead of a query with rotten groups.
+
+
+```
+SELECT 
+	name, 
+	c.season_x, 
+	c.position, 
+	sum(minutes) as MinutesPlayed, 
+	sum(total_points) as TotalPoints,
+	ROUND(AVG(CAST(total_points AS FLOAT)), 2) as AveragePoints,
+	ROUND(CAST((select top 1 value FROM [FPL].[dbo].[cleaned_merged_seasons] cm where cm.season_x = c.season_x and cm.element = c.element and value is not null order by gw asc)  AS FLOAT), 2)  /10 as StartingPrice,
+	ROUND(CAST((select top 1 value FROM [FPL].[dbo].[cleaned_merged_seasons] cm where cm.season_x = c.season_x and cm.element = c.element and value is not null order by gw desc)  AS FLOAT), 2)  /10 as EndPrice
+ INTO BaseData
+ FROM [FPL].[dbo].[cleaned_merged_seasons] c
+   where c.minutes !=0
+   group by name, season_x, position, element
+   ;
+   ```
